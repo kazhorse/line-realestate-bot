@@ -206,6 +206,18 @@ async def callback(request: Request):
             )
             continue
 
+        # 6. 全部回答し終わったので、一度「診断中」を返してから GPT に投げる
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text=(
+                    "ご回答ありがとうございました！\n"
+                    "いただいた条件をもとに、おすすめ物件を作成しています。\n"
+                    "少しだけお待ちください。"
+                )
+            ),
+        )
+
         # 6. 全部回答し終わったので、ここで初めて GPT に1回だけ送る
         reply_text = await summarize_with_gpt(state["answers"])
         messages = split_recommendations(reply_text)
