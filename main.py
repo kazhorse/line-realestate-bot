@@ -164,14 +164,31 @@ async def callback(request: Request):
 
         # 3. 「終了」で途中までの回答を GPT に投げる
         if text == "終了":
-            reply_text = await summarize_with_gpt(state["answers"])
-            messages = split_recommendations(reply_text)
+            # ① 先に即時返信（診断中メッセージ）
             line_bot_api.reply_message(
                 event.reply_token,
+                TextSendMessage(
+                    text=(
+                        "ご回答ありがとうございました！\n"
+                        "いただいた条件をもとに、おすすめ物件を作成しています。\n"
+                        "少しだけお待ちください。"
+                    )
+                ),
+            )
+
+            # ② GPT を呼び出す（この部分は待ってOK）
+            reply_text = await summarize_with_gpt(state["answers"])
+            messages = split_recommendations(reply_text)
+
+            # ③ 完成した結果を push_message で送信
+            line_bot_api.push_message(
+                user_id,
                 messages,
             )
+
             del user_states[user_id]
             continue
+
 
         # 4. 今の質問への回答を保存
         if idx < len(QUESTIONS):
